@@ -8,7 +8,7 @@ fastify.get('/', async (req, reply) => {
     return { hello: 'worlds' }
 })
 
-const PORT = 5000;
+const PORT = 4000;
 try {
     await fastify.listen({ port: PORT })
     console.log(`Server Running at ${PORT}`);
