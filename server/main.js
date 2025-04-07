@@ -5,10 +5,10 @@ const fastify = Fastify({
 })
 
 fastify.get('/', async (req, reply) => {
-    return { hello: 'worlds' }
+    return { "hello": "hello" }
 })
 
-const PORT = 4000;
+const PORT = 5000;
 try {
     await fastify.listen({ port: PORT })
     console.log(`Server Running at ${PORT}`);
