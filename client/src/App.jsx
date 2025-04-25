@@ -3,10 +3,6 @@ import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
 import Hello from './study01/Hello'
-<<<<<<< HEAD
-
-=======
->>>>>>> 0c4d260a3b7e091d76e4ddc29888dc126358a12c
 function App() {
   const [count, setCount] = useState(0)
 
