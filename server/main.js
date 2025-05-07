@@ -1,20 +1,24 @@
-import Fastify from 'fastify'
-import cors from '@fastify/cors'
-import axios from 'axios'
-import iconv from 'iconv-lite';
-import { load } from "cheerio";
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import { PrismaClient } from '@prisma/client'; // ✅ 올바른 import
+import fastifyFormbody from '@fastify/formbody';
 
 const fastify = Fastify({
     logger: true
-})
-
-fastify.register(cors, {
-    origin: 'http://localhost:5173'
-})
+});
+// ✅ 반드시 가장 먼저 등록
+await fastify.register(cors, {
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST', 'OPTIONS'], // 프리플라이트 허용
+    credentials: true // (옵션) 인증 필요 시 사용
+});
+// ✅ JSON body parsing 추가
+fastify.register(fastifyFormbody);
+const prisma = new PrismaClient(); // ✅ 클라이언트 생성
 
 fastify.get('/', async (req, reply) => {
-    return { "hello": "hello" }
-})
+    return { "hello": "hello" };
+});
 
 fastify.post('/api/post', async (req, reply) => {
     try {
@@ -24,40 +28,34 @@ fastify.post('/api/post', async (req, reply) => {
         reply.status(200).send({ responseNumber: result });
     } catch (err) {
         console.error(err);
+        reply.status(500).send({ error: '서버 오류' });
     }
-})
+});
+
+fastify.post('/api/bank', async (req, reply) => {
+    try {
+        const { name, money, who } = req.body;
+
+        const newDad = await prisma.dad.create({
+            data: { name, money, who }
+        });
+
+        reply.send({
+            ...newDad,
+            id: newDad.id.toString() // BigInt 문제 방지
+        });
+    } catch (err) {
+        console.error("🔥 Prisma 오류:", err); // 여기서 err 전체 확인 중요!
+        reply.status(500).send({ error: 'DB 저장 실패', details: err.message });
+    }
+});
 
 const PORT = 5000;
 
-const fetchPopularNews = async () => {
-    const response = await axios.get("https://news.naver.com/main/ranking/popularDay.naver", {
-        responseType: "arraybuffer", // 중요: raw binary로 받기
-    });
-
-    // EUC-KR로 디코딩
-    const decoded = iconv.decode(response.data, "EUC-KR");
-    const $ = load(decoded);
-    const articles = [];
-
-    $(".rankingnews_box a").each((i, el) => {
-        const title = $(el).text().trim();
-        const url = $(el).attr("href");
-        if (title && url) {
-            articles.push({
-                title,
-                url: url.startsWith("http") ? url : `https://news.naver.com${url}`,
-            });
-        }
-    });
-
-    return articles;
-};
 try {
-    await fastify.listen({ port: PORT })
+    await fastify.listen({ port: PORT });
     console.log(`Server Running at ${PORT}`);
-
-    fetchPopularNews().then(console.log);
 } catch (err) {
-    fastify.log.error(err)
-    process.exit(1)
+    fastify.log.error(err);
+    process.exit(1);
 }
