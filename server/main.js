@@ -8,7 +8,7 @@ const fastify = Fastify({
 });
 // ✅ 반드시 가장 먼저 등록
 await fastify.register(cors, {
-    origin: 'http://localhost:5173',
+    origin: ['http://localhost:5173', 'https://check1924s.netlify.app/'],
     methods: ['GET', 'POST', 'OPTIONS'], // 프리플라이트 허용
     credentials: true // (옵션) 인증 필요 시 사용
 });
